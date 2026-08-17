@@ -7,6 +7,9 @@ import {
   updateUserSchema,
 } from '../functions/EXAMPLE_Update.js'
 
+//Aqui pode perceber que estou usando o mesmo schema do zod para o parametro de url e pro body
+//Pode usar o .pick({parameto:true}) -> para pegar um so parametro do schema zod
+// omit({parametro: true}).parcial() ->  para omitir um parametro
 export const updateUserRoute: FastifyPluginCallbackZod = async (app) => {
   app.patch(
     '/users/:id',

@@ -1,3 +1,5 @@
+//Criando resposta padrão da api
+
 export interface ApiResponse<T = null> {
   status: boolean
   data: T

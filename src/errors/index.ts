@@ -2,6 +2,8 @@ import { AppError } from './app-error.js'
 
 export { AppError } from './app-error.js'
 
+//Aqui onde voces irao criar os erros personalizados, cada um com seu status code
+//So reptir a mesma estrutura
 export class ValidationError extends AppError {
   constructor(
     message: string,
