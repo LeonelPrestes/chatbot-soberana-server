@@ -12,7 +12,8 @@ import {
   validatorCompiler,
   ZodTypeProvider,
 } from 'fastify-type-provider-zod'
-import { env } from './env/env'
+import { env } from './env/env.js'
+import { errorHandler } from './errors/error-handler.js'
 
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -78,4 +79,17 @@ app.register(fastifyApiReference, {
   },
 })
 
+errorHandler(app)
+
 //Routes
+import { createUserExampleRoute } from './routes/EXAMPLE_Create.route.js'
+import { deleteUserExampleRoute } from './routes/EXAMPLE_Delete.route.js'
+import { getAllUsersRoute } from './routes/EXAMPLE_Get_All.route.js'
+import { getUserDetailsRoute } from './routes/EXAMPLE_Get_Details.route.js'
+import { updateUserRoute } from './routes/EXAMPLE_Update.route.js'
+
+app.register(createUserExampleRoute)
+app.register(deleteUserExampleRoute)
+app.register(getAllUsersRoute)
+app.register(getUserDetailsRoute)
+app.register(updateUserRoute)
