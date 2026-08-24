@@ -14,6 +14,7 @@ import {
 } from 'fastify-type-provider-zod'
 import { env } from './env/env.js'
 import { errorHandler } from './errors/error-handler.js'
+import { logger } from './lib/logger.js'
 
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -21,7 +22,7 @@ import path from 'node:path'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-export const app = fastify({}).withTypeProvider<ZodTypeProvider>()
+export const app = fastify({ logger }).withTypeProvider<ZodTypeProvider>()
 
 app.setValidatorCompiler(validatorCompiler)
 app.setSerializerCompiler(serializerCompiler)
@@ -80,16 +81,3 @@ app.register(fastifyApiReference, {
 })
 
 errorHandler(app)
-
-//Routes
-import { createUserExampleRoute } from './routes/EXAMPLE_Create.route.js'
-import { deleteUserExampleRoute } from './routes/EXAMPLE_Delete.route.js'
-import { getAllUsersRoute } from './routes/EXAMPLE_Get_All.route.js'
-import { getUserDetailsRoute } from './routes/EXAMPLE_Get_Details.route.js'
-import { updateUserRoute } from './routes/EXAMPLE_Update.route.js'
-
-app.register(createUserExampleRoute)
-app.register(deleteUserExampleRoute)
-app.register(getAllUsersRoute)
-app.register(getUserDetailsRoute)
-app.register(updateUserRoute)
