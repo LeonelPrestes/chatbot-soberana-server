@@ -11,3 +11,36 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum UserType {
+  STUDENT      @map("estudante")
+  PROFESSIONAL @map("profissional")
+
+  @@map("tipo_usuario")
+}
+
+model User {
+  id           String @id @default(uuid()) @db.Uuid
+  name         String @map("nome")
+  email        String @unique
+  passwordHash String @map("senha_hash")
+
+  emailVerifiedAt DateTime? @map("email_verificado_em")
+  phone           String?   @map("telefone")
+  cpf             String?
+  specialty       String?   @map("especialidade")
+  userType        UserType? @map("tipo_usuario")
+  city            String?   @map("cidade")
+  state           String?   @map("estado")
+
+  termsAcceptedAt         DateTime @map("termos_aceitos_em")
+  termsVersion            String   @map("versao_termos")
+  privacyPolicyAcceptedAt DateTime @map("politica_privacidade_aceita_em")
+  privacyPolicyVersion    String   @map("versao_politica_privacidade")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("users")
+}
