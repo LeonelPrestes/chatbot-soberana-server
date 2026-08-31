@@ -1,3 +1,4 @@
+import { loggerOptions } from './lib/logger.js'
 import fastifyCookie from '@fastify/cookie'
 import fastifyCors from '@fastify/cors'
 import fastifyJwt from '@fastify/jwt'
@@ -12,7 +13,8 @@ import {
   validatorCompiler,
   ZodTypeProvider,
 } from 'fastify-type-provider-zod'
-import { env } from './env/env'
+import { env } from './env/env.js'
+import { errorHandler } from './errors/error-handler.js'
 
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -20,7 +22,9 @@ import path from 'node:path'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-export const app = fastify({}).withTypeProvider<ZodTypeProvider>()
+export const app = fastify({
+  logger: loggerOptions,
+}).withTypeProvider<ZodTypeProvider>()
 
 app.setValidatorCompiler(validatorCompiler)
 app.setSerializerCompiler(serializerCompiler)
@@ -78,4 +82,4 @@ app.register(fastifyApiReference, {
   },
 })
 
-//Routes
+errorHandler(app)
