@@ -82,4 +82,18 @@ app.register(fastifyApiReference, {
   },
 })
 
+// Clinicas Routes
+
+import { createClinicRoute } from './routes/Clinic_Create.route.js';
+import { getAllClinicsRoute } from './routes/Clinic_Get_All.route.js';
+import { getClinicDetailsRoute } from './routes/Clinic_Get_Details.route.js';
+import { updateClinicRoute } from './routes/Clinic_Update.route.js';
+import { deleteClinicRoute } from './routes/Clinic_Delete.route.js';
+
+app.register(createClinicRoute);
+app.register(getAllClinicsRoute);
+app.register(getClinicDetailsRoute);
+app.register(updateClinicRoute);
+app.register(deleteClinicRoute);
+
 errorHandler(app)

@@ -19,6 +19,60 @@ enum UserType {
   @@map("tipo_usuario")
 }
 
+enum ClinicType {
+  OWN        @map("propria")
+  OUTSOURCED @map("terceirizada")
+
+  @@map("tipo_clinica")
+}
+
+enum MaterialSupplier {
+  DENTIST @map("dentista")
+  CLINIC  @map("clinica")
+
+  @@map("fornecedor_material")
+}
+
+enum PaymentMethod {
+  COMMISSION   @map("comissao")
+  MONTHLY_RENT @map("aluguel_mensal")
+  FIXED_VALUE  @map("valor_fixo")
+
+  @@map("forma_remuneracao")
+}
+
+enum ProfitType {
+  MARKUP @map("markup")
+  MARGIN @map("margem")
+
+  @@map("tipo_lucro")
+}
+
+enum ItemCategory {
+  MATERIAL           @map("material")
+  COMMISSION         @map("comissao")
+  TAX                @map("imposto")
+  ADDITIONAL_EXPENSE @map("gasto_adicional")
+  OTHER              @map("outro")
+
+  @@map("categoria_item")
+}
+
+enum MessageSender {
+  USER @map("user")
+  AI   @map("ia")
+
+  @@map("remetente")
+}
+
+enum MessageStatus {
+  PENDING   @map("pendente")
+  CONFIRMED @map("confirmado")
+  REJECTED  @map("rejeitado")
+
+  @@map("status_mensagem")
+}
+
 model User {
   id           String @id @default(uuid()) @db.Uuid
   name         String @map("nome")
@@ -33,6 +87,18 @@ model User {
   city            String?   @map("cidade")
   state           String?   @map("estado")
 
+  // [RN-01] CRO e estado do CRO não são obrigatórios no cadastro.
+  // stateCro só é obrigatório (validação de aplicação) se cro for preenchido.
+  cro      String? @map("cro")
+  stateCro String? @map("estado_cro")
+
+  // Configurações padrão usadas como valores iniciais em novas precificações
+  defaultCurrency     String?  @map("moeda_padrao") @default("BRL")
+  defaultServiceTime  Int?     @map("tempo_atendimento_padrao")
+  defaultProfitMargin Decimal? @map("margem_lucro_padrao") @db.Decimal(5, 4)
+  defaultTaxRate      Decimal? @map("aliquota_imposto_padrao") @db.Decimal(5, 4)
+  defaultCardFee      Decimal? @map("taxa_cartao_padrao") @db.Decimal(5, 4)
+
   termsAcceptedAt         DateTime @map("termos_aceitos_em")
   termsVersion            String   @map("versao_termos")
   privacyPolicyAcceptedAt DateTime @map("politica_privacidade_aceita_em")
@@ -42,5 +108,182 @@ model User {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
+  clinics       Clinic[]
+  pricings      Pricing[]
+  conversations Conversation[]
+
   @@map("users")
+}
+
+model Clinic {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+
+  name    String  @map("nome")
+  city    String  @map("cidade")
+  state   String  @map("estado")
+  address String? @map("endereco")
+
+  clinicType           ClinicType       @map("tipo_clinica")
+  materialSupplier     MaterialSupplier @map("fornecedor_material")
+  paymentMethod        PaymentMethod    @map("forma_remuneracao")
+  commissionPercentage Decimal?         @map("percentual_comissao") @db.Decimal(5, 4)
+  rentAmount           Decimal?         @map("valor_aluguel_sala") @db.Decimal(12, 2)
+  otherExpenses        Decimal?         @map("outras_despesas_recorrentes") @db.Decimal(12, 2)
+  notes                String?          @map("observacoes")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  procedures  Procedure[]
+  clinicCosts ClinicCosts[]
+  pricings    Pricing[]
+
+  @@map("clinicas")
+}
+
+model Procedure {
+  id       String @id @default(uuid()) @db.Uuid
+  clinicId String @map("clinica_id") @db.Uuid
+  clinic   Clinic @relation(fields: [clinicId], references: [id])
+
+  name        String  @map("nome")
+  category    String  @map("categoria")
+  averageTime Int?    @map("tempo_medio")
+  description String? @map("descricao")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("procedimentos")
+}
+
+// [D2] Snapshot de custos por período de vigência da clínica
+model ClinicCosts {
+  id       String @id @default(uuid()) @db.Uuid
+  clinicId String @map("clinica_id") @db.Uuid
+  clinic   Clinic @relation(fields: [clinicId], references: [id])
+
+  sixMonthFixedCost      Decimal  @map("custo_fixo_6m") @db.Decimal(12, 2)
+  sixMonthVariableCost   Decimal  @map("custo_variavel_6m") @db.Decimal(12, 2)
+  monthlyFixedCost       Decimal  @map("custo_fixo_mensal") @db.Decimal(12, 2)
+  monthlyVariableCost    Decimal  @map("custo_variavel_mensal") @db.Decimal(12, 2)
+  effectiveHoursPerMonth Decimal  @map("horas_efetivas_mes") @db.Decimal(6, 2)
+  effectiveDate          DateTime @map("data_vigencia") @db.Date
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  pricings Pricing[]
+
+  @@map("clinica_custos")
+}
+
+model Pricing {
+  id String @id @default(uuid()) @db.Uuid
+
+  clinicId String @map("clinica_id") @db.Uuid
+  clinic   Clinic @relation(fields: [clinicId], references: [id])
+
+  userId String @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+
+  clinicCostsId String      @map("clinica_custos_id") @db.Uuid
+  clinicCosts   ClinicCosts @relation(fields: [clinicCostsId], references: [id])
+
+  pricingDate   DateTime @map("data_precificacao") @db.Date
+  procedureType String   @map("tipo_procedimento")
+
+  clinicalMinuteCost Decimal @map("custo_minuto_clinico") @db.Decimal(12, 4)
+  procedureTime      Int     @map("tempo_procedimento")
+
+  materialsCost  Decimal @map("custo_materiais") @db.Decimal(12, 2)
+  additionalCost Decimal @default(0) @map("custo_adicional") @db.Decimal(12, 2)
+  totalCost      Decimal @map("custo_total") @db.Decimal(12, 2)
+
+  tax        Decimal @map("imposto") @db.Decimal(5, 4)
+  fees       Decimal @map("taxas") @db.Decimal(5, 4)
+  commission Decimal @map("comissao") @db.Decimal(5, 4)
+  charges    Decimal @map("incidencias") @db.Decimal(5, 4)
+
+  profitType     ProfitType @map("tipo_lucro")
+  profit         Decimal    @map("lucro") @db.Decimal(5, 4)
+  adjustedCost   Decimal    @map("custo_corrigido") @db.Decimal(12, 2)
+  suggestedPrice Decimal    @map("preco_sugerido") @db.Decimal(12, 2)
+
+  version Int @default(1)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  items         PricingItem[]
+  conversations Conversation[]
+
+  // [B-02] CHECK manual (adicionar via migração SQL):
+  // ALTER TABLE precificacoes ADD CONSTRAINT chk_incidencias_max CHECK (incidencias <= 0.95);
+  @@map("precificacoes")
+}
+
+model PricingItem {
+  id        String  @id @default(uuid()) @db.Uuid
+  pricingId String  @map("precificacao_id") @db.Uuid
+  pricing   Pricing @relation(fields: [pricingId], references: [id])
+
+  category ItemCategory @map("categoria")
+  name     String       @map("nome")
+  value    Decimal      @map("valor") @db.Decimal(12, 2)
+  quantity Decimal      @default(1) @map("quantidade") @db.Decimal(10, 2)
+
+  version Int @default(1)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("itens_precificacao")
+}
+
+model Conversation {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+
+  pricingId String?  @map("precificacao_id") @db.Uuid
+  pricing   Pricing? @relation(fields: [pricingId], references: [id])
+
+  title String   @map("titulo")
+  date  DateTime @map("data")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  messages Message[]
+
+  @@map("conversas")
+}
+
+model Message {
+  id             String       @id @default(uuid()) @db.Uuid
+  conversationId String       @map("conversa_id") @db.Uuid
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+
+  sender  MessageSender @map("remetente")
+  content String        @map("conteudo") @db.Text
+
+  structuredPayload Json?         @map("payload_estrutrado")
+  status            MessageStatus @default(PENDING) @map("status")
+
+  date DateTime @map("data")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("mensagens")
 }
