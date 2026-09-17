@@ -94,7 +94,7 @@ import { createProcedureRoute } from './routes/Procedure_Create.route.js';
 import { getAllProceduresRoute } from './routes/Procedure_Get_All.route.js';
 import { getProcedureDetailsRoute } from './routes/Procedure_Get_Details.route.js';
 import { updateProcedureRoute } from './routes/Procedure_Update.route.js';
-import { deleteProcedureRoute } from './routes/Procedute_Delete.route.js';
+import { deleteProcedureRoute } from './routes/Procedure_Delete.route.js';
 
 
 app.register(createClinicRoute);
