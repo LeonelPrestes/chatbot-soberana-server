@@ -9,7 +9,7 @@ import { auth } from "../middleware/auth.js";
 
 export const getClinicCostsHistoryRoute: FastifyPluginCallbackZod = async (app) => {
     app.get(
-        "clinics/:clinicId/costs/history",
+        "/clinics/:clinicId/costs/history",
         {
             preHandler: [auth],
             schema: {

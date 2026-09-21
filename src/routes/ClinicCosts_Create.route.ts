@@ -10,7 +10,7 @@ import { auth } from "../middleware/auth.js";
 
 export const createClinicCostsRoute: FastifyPluginCallbackZod = async (app) => {
     app.post(
-        "clinics/:clinicId/costs",
+        "/clinics/:clinicId/costs",
         {
             preHandler: [auth],
             schema: {
