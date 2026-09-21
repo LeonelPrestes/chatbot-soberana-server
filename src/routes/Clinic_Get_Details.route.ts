@@ -1,9 +1,9 @@
-import {
+import { FastifyPluginCallbackZod } from "fastify-type-provider-zod";
+import { 
+    getClinicDetails,
     getClinicDetailsParamsSchema,
     getClinicDetailsResponseSchema,
 } from "../functions/Clinic_Get_Details.js";
-import { FastifyPluginCallbackZod } from "fastify-type-provider-zod";
-import { getClinicDetails } from "../functions/Clinic_Get_Details.js";
 import { ok } from "../lib/api-response.js";
 import { auth } from "../middleware/auth.js"
 
