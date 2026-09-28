@@ -89,11 +89,19 @@ import { getAllClinicsRoute } from './routes/Clinic_Get_All.route.js';
 import { getClinicDetailsRoute } from './routes/Clinic_Get_Details.route.js';
 import { updateClinicRoute } from './routes/Clinic_Update.route.js';
 import { deleteClinicRoute } from './routes/Clinic_Delete.route.js';
+import { createClinicCostsRoute } from './routes/ClinicCosts_Create.route.js'
+import { getCurrentClinicCostsRoute } from './routes/ClinicCosts_GetCurrent.route.js'
+import { getClinicCostsHistoryRoute } from './routes/ClinicCosts_GetHistory.route.js'
+import { clinicPricingDefaultsRoute } from './routes/ClinicPricing_Defaults.route.js'
 
 app.register(createClinicRoute);
 app.register(getAllClinicsRoute);
 app.register(getClinicDetailsRoute);
 app.register(updateClinicRoute);
 app.register(deleteClinicRoute);
+app.register(createClinicCostsRoute);
+app.register(getCurrentClinicCostsRoute);
+app.register(getClinicCostsHistoryRoute);
+app.register(clinicPricingDefaultsRoute);
 
 errorHandler(app)

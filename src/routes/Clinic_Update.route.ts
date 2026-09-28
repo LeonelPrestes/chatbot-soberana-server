@@ -1,12 +1,11 @@
 import { FastifyPluginCallbackZod } from "fastify-type-provider-zod";
-
-import { ok } from "../lib/api-response.js";
 import {
     updateClinic,
     updateClinicResponseSchema,
     updateClinicParamsSchema,
     updateClinicBodySchema,
 } from "../functions/Clinic_Update.js";
+import { ok } from "../lib/api-response.js";
 import { auth } from "../middleware/auth.js";
 
 export const updateClinicRoute: FastifyPluginCallbackZod = async (app) => {
