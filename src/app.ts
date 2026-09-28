@@ -117,9 +117,11 @@ app.register(getAllProceduresRoute, apiPrefix)
 app.register(getProcedureDetailsRoute, apiPrefix)
 app.register(updateProcedureRoute, apiPrefix)
 app.register(deleteProcedureRoute, apiPrefix)
+// Custos de Clinicas Routes
 app.register(createClinicCostsRoute, apiPrefix)
 app.register(getCurrentClinicCostsRoute, apiPrefix)
 app.register(getClinicCostsHistoryRoute, apiPrefix)
+// Derivação dos defaults de precificação Route
 app.register(clinicPricingDefaultsRoute, apiPrefix)
 
 app.get('/api/docs/json', async () => app.swagger())
