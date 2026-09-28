@@ -96,6 +96,10 @@ import { getProcedureDetailsRoute } from './routes/Procedure_Get_Details.route.j
 import { updateProcedureRoute } from './routes/Procedure_Update.route.js';
 import { deleteProcedureRoute } from './routes/Procedure_Delete.route.js';
 
+import { createClinicCostsRoute } from './routes/ClinicCosts_Create.route.js'
+import { getCurrentClinicCostsRoute } from './routes/ClinicCosts_GetCurrent.route.js'
+import { getClinicCostsHistoryRoute } from './routes/ClinicCosts_GetHistory.route.js'
+import { clinicPricingDefaultsRoute } from './routes/ClinicPricing_Defaults.route.js'
 
 app.register(createClinicRoute);
 app.register(getAllClinicsRoute);
@@ -108,5 +112,9 @@ app.register(getAllProceduresRoute);
 app.register(getProcedureDetailsRoute)
 app.register(updateProcedureRoute)
 app.register(deleteProcedureRoute)
+app.register(createClinicCostsRoute);
+app.register(getCurrentClinicCostsRoute);
+app.register(getClinicCostsHistoryRoute);
+app.register(clinicPricingDefaultsRoute);
 
 errorHandler(app)
