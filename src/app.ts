@@ -76,6 +76,7 @@ app.register(fastifySwagger, {
 
 app.register(fastifyApiReference, {
   routePrefix: '/docs',
+  openApiDocumentEndpoints: { json: '/json' },
   configuration: {
     theme: 'mars',
     hideClientButton: true,
@@ -100,24 +101,29 @@ import { createClinicCostsRoute } from './routes/ClinicCosts_Create.route.js'
 import { getCurrentClinicCostsRoute } from './routes/ClinicCosts_GetCurrent.route.js'
 import { getClinicCostsHistoryRoute } from './routes/ClinicCosts_GetHistory.route.js'
 import { clinicPricingDefaultsRoute } from './routes/ClinicPricing_Defaults.route.js'
+import { authRoutes } from './routes/Auth.route.js'
 
-// Clinicas Routes
-app.register(createClinicRoute);
-app.register(getAllClinicsRoute);
-app.register(getClinicDetailsRoute);
-app.register(updateClinicRoute);
-app.register(deleteClinicRoute);
+const apiPrefix = { prefix: '/api' }
+
+app.register(authRoutes, apiPrefix)
+app.register(createClinicRoute, apiPrefix)
+app.register(getAllClinicsRoute, apiPrefix)
+app.register(getClinicDetailsRoute, apiPrefix)
+app.register(updateClinicRoute, apiPrefix)
+app.register(deleteClinicRoute, apiPrefix)
 // Procedimentos Routes
-app.register(createProcedureRoute);
-app.register(getAllProceduresRoute);
-app.register(getProcedureDetailsRoute)
-app.register(updateProcedureRoute)
-app.register(deleteProcedureRoute)
+app.register(createProcedureRoute, apiPrefix)
+app.register(getAllProceduresRoute, apiPrefix)
+app.register(getProcedureDetailsRoute, apiPrefix)
+app.register(updateProcedureRoute, apiPrefix)
+app.register(deleteProcedureRoute, apiPrefix)
 // Custos de Clinicas Routes
-app.register(createClinicCostsRoute);
-app.register(getCurrentClinicCostsRoute);
-app.register(getClinicCostsHistoryRoute);
+app.register(createClinicCostsRoute, apiPrefix)
+app.register(getCurrentClinicCostsRoute, apiPrefix)
+app.register(getClinicCostsHistoryRoute, apiPrefix)
 // Derivação dos defaults de precificação Route
-app.register(clinicPricingDefaultsRoute);
+app.register(clinicPricingDefaultsRoute, apiPrefix)
+
+app.get('/api/docs/json', async () => app.swagger())
 
 errorHandler(app)
