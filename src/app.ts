@@ -101,6 +101,7 @@ import { getCurrentClinicCostsRoute } from './routes/ClinicCosts_GetCurrent.rout
 import { getClinicCostsHistoryRoute } from './routes/ClinicCosts_GetHistory.route.js'
 import { clinicPricingDefaultsRoute } from './routes/ClinicPricing_Defaults.route.js'
 
+// Clinicas Routes
 app.register(createClinicRoute);
 app.register(getAllClinicsRoute);
 app.register(getClinicDetailsRoute);
@@ -112,9 +113,11 @@ app.register(getAllProceduresRoute);
 app.register(getProcedureDetailsRoute)
 app.register(updateProcedureRoute)
 app.register(deleteProcedureRoute)
+// Custos de Clinicas Routes
 app.register(createClinicCostsRoute);
 app.register(getCurrentClinicCostsRoute);
 app.register(getClinicCostsHistoryRoute);
+// Derivação dos defaults de precificação Route
 app.register(clinicPricingDefaultsRoute);
 
 errorHandler(app)
