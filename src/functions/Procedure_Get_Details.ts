@@ -26,10 +26,11 @@ export async function getProcedureDetails(
         where: {
             id,
             deletedAt: null,
-            clinic: {
-                userId,
-                deletedAt: null,
-            },
+            active: true,
+            OR: [
+                { userId: null, clinicId: null },
+                { userId, clinic: { deletedAt: null } },
+            ],
         },
     });
 

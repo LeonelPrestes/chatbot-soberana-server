@@ -41,9 +41,7 @@ export async function deleteProcedure({ id }: DeleteProcedureParams, userId: str
 
     const pricing = await prisma.pricing.findFirst({
         where: {
-            clinicId: procedure.clinicId,
-            deletedAt: null,
-            procedureType: procedure.name,
+            procedureId: procedure.id,
         },
     });
 
