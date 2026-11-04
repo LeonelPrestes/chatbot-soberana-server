@@ -17,6 +17,7 @@ import { env } from './env/env.js'
 import { errorHandler } from './errors/error-handler.js'
 import { ok } from './lib/api-response.js'
 import { prismaPlugin } from './plugins/prisma.js'
+import { apiModules } from './modules/index.js'
 
 import path from 'node:path'
 
@@ -86,46 +87,7 @@ app.register(fastifyApiReference, {
   },
 })
 
-// Clinicas Routes
-
-import { createClinicRoute } from './routes/Clinic_Create.route.js';
-import { getAllClinicsRoute } from './routes/Clinic_Get_All.route.js';
-import { getClinicDetailsRoute } from './routes/Clinic_Get_Details.route.js';
-import { updateClinicRoute } from './routes/Clinic_Update.route.js';
-import { deleteClinicRoute } from './routes/Clinic_Delete.route.js';
-// Procedimentos Routes
-import { createProcedureRoute } from './routes/Procedure_Create.route.js';
-import { getAllProceduresRoute } from './routes/Procedure_Get_All.route.js';
-import { getProcedureDetailsRoute } from './routes/Procedure_Get_Details.route.js';
-import { updateProcedureRoute } from './routes/Procedure_Update.route.js';
-import { deleteProcedureRoute } from './routes/Procedure_Delete.route.js';
-
-import { createClinicCostsRoute } from './routes/ClinicCosts_Create.route.js'
-import { getCurrentClinicCostsRoute } from './routes/ClinicCosts_GetCurrent.route.js'
-import { getClinicCostsHistoryRoute } from './routes/ClinicCosts_GetHistory.route.js'
-import { clinicPricingDefaultsRoute } from './routes/ClinicPricing_Defaults.route.js'
-import { authRoutes } from './routes/Auth.route.js'
-
-const apiPrefix = { prefix: '/api' }
-
-app.register(authRoutes, apiPrefix)
-app.register(createClinicRoute, apiPrefix)
-app.register(getAllClinicsRoute, apiPrefix)
-app.register(getClinicDetailsRoute, apiPrefix)
-app.register(updateClinicRoute, apiPrefix)
-app.register(deleteClinicRoute, apiPrefix)
-// Procedimentos Routes
-app.register(createProcedureRoute, apiPrefix)
-app.register(getAllProceduresRoute, apiPrefix)
-app.register(getProcedureDetailsRoute, apiPrefix)
-app.register(updateProcedureRoute, apiPrefix)
-app.register(deleteProcedureRoute, apiPrefix)
-// Custos de Clinicas Routes
-app.register(createClinicCostsRoute, apiPrefix)
-app.register(getCurrentClinicCostsRoute, apiPrefix)
-app.register(getClinicCostsHistoryRoute, apiPrefix)
-// Derivação dos defaults de precificação Route
-app.register(clinicPricingDefaultsRoute, apiPrefix)
+app.register(apiModules, { prefix: '/api' })
 
 app.get('/api/docs/json', async () => app.swagger())
 

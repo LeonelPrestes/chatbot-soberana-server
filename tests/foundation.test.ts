@@ -45,6 +45,8 @@ test('rota de saúde responde no envelope e plugin Prisma está registrado', asy
     assert.equal(typeof body.data.uptime, 'number')
     assert.equal(new Date(body.timestamp).toISOString(), body.timestamp)
     assert.ok(app.prisma)
+    const protectedRoute = await app.inject({ method: 'GET', url: '/api/procedures' })
+    assert.equal(protectedRoute.statusCode, 401)
   } finally {
     await app.close()
   }
