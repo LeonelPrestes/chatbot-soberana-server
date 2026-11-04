@@ -58,10 +58,11 @@ export async function createClinicCosts({ clinicId }: ClinicCostsParams, data: C
         prisma.clinicCosts.updateMany({
             where: {
                 clinicId,
-                deletedAt: null
+                effectiveEnd: null,
+                deletedAt: null,
             },
             data: {
-                deletedAt: new Date()
+                effectiveEnd: effectiveDate,
             },
         }),
         prisma.clinicCosts.create({
@@ -84,7 +85,7 @@ export async function createClinicCosts({ clinicId }: ClinicCostsParams, data: C
         sixMonthVariableCost: novoCusto.sixMonthVariableCost.toNumber(),
         monthlyFixedCost: novoCusto.monthlyFixedCost.toNumber(),
         monthlyVariableCost: novoCusto.monthlyVariableCost.toNumber(),
-        effectiveHoursPerMonth: novoCusto.effectiveHoursPerMonth,
+        effectiveHoursPerMonth: novoCusto.effectiveHoursPerMonth.toNumber(),
         effectiveDate: novoCusto.effectiveDate,
     });
 };

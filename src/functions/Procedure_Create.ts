@@ -15,6 +15,8 @@ export const createProcedureSchema = z.object({
 // Schema da resposta da API
 export const procedureSchema = createProcedureSchema.extend({
     id: z.string().uuid(),
+    clinicId: z.string().uuid().nullable(),
+    category: z.string().nullable(),
 });
 
 
@@ -45,6 +47,7 @@ export async function createProcedure(data: CreateProcedureRequest, userId: stri
 
     const createdProcedure = await prisma.procedure.create({
         data: {
+            userId,
             clinicId: data.clinicId,
             name: data.name,
             category: data.category,

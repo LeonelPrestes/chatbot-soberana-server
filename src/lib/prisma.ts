@@ -2,10 +2,11 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '../../generated/prisma/client.js'
 import { env } from '../env/env.js'
 import { logger } from './logger.js'
+import { scopeSoftDeletedQuery } from './soft-delete.js'
 
 const adapter = new PrismaPg({ connectionString: env.DATABASE_URL })
 
-export const prisma = new PrismaClient({
+const basePrisma = new PrismaClient({
   adapter,
   log: [
     { emit: 'event', level: 'query' },
@@ -14,7 +15,7 @@ export const prisma = new PrismaClient({
   ],
 })
 
-prisma.$on('query', (e) => {
+basePrisma.$on('query', (e) => {
   const slow = e.duration >= 200
   if (slow) {
     logger.warn({ duration: `${e.duration}ms`, query: e.query }, 'Slow query')
@@ -26,10 +27,20 @@ prisma.$on('query', (e) => {
   }
 })
 
-prisma.$on('warn', (e) => {
+basePrisma.$on('warn', (e) => {
   logger.warn({ message: e.message }, 'Prisma warning')
 })
 
-prisma.$on('error', (e) => {
+basePrisma.$on('error', (e) => {
   logger.error({ message: e.message }, 'Prisma error')
+})
+
+export const prisma = basePrisma.$extends({
+  query: {
+    $allModels: {
+      $allOperations({ model, operation, args, query }) {
+        return query(scopeSoftDeletedQuery(model, operation, args))
+      },
+    },
+  },
 })

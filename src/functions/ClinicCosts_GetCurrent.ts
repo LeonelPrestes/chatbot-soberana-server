@@ -29,7 +29,8 @@ export async function getCurrentClinicCosts({ clinicId }: ClinicCostsParams, use
     const custoVigente = await prisma.clinicCosts.findFirst({
         where: {
             clinicId,
-            deletedAt: null
+            effectiveEnd: null,
+            deletedAt: null,
         },
     });
 
@@ -39,11 +40,11 @@ export async function getCurrentClinicCosts({ clinicId }: ClinicCostsParams, use
     return clinicCostsSchema.parse({
         id: custoVigente.id,
         clinicId: custoVigente.clinicId,
-        sixMonthFixedCost: custoVigente.sixMonthFixedCost,
-        sixMonthVariableCost: custoVigente.sixMonthVariableCost,
-        monthlyFixedCost: custoVigente.monthlyFixedCost,
-        monthlyVariableCost: custoVigente.monthlyVariableCost,
-        effectiveHoursPerMonth: custoVigente.effectiveHoursPerMonth,
+        sixMonthFixedCost: custoVigente.sixMonthFixedCost.toNumber(),
+        sixMonthVariableCost: custoVigente.sixMonthVariableCost.toNumber(),
+        monthlyFixedCost: custoVigente.monthlyFixedCost.toNumber(),
+        monthlyVariableCost: custoVigente.monthlyVariableCost.toNumber(),
+        effectiveHoursPerMonth: custoVigente.effectiveHoursPerMonth.toNumber(),
         effectiveDate: custoVigente.effectiveDate,
     });
 };

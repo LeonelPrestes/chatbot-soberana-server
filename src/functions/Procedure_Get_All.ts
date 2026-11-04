@@ -11,9 +11,9 @@ export const getProceduresResponseSchema = z.object({
     data: z.array(
         z.object({
             id: z.string(),
-            clinicId: z.string(),
+            clinicId: z.string().nullable(),
             name: z.string(),
-            category: z.string(),
+            category: z.string().nullable(),
             averageTime: z.number().int().positive().optional(),
             description: z.string().optional(),
         }),
@@ -30,10 +30,11 @@ export async function getAllProcedures(userId: string, { search }: GetProcedures
     const procedures = await prisma.procedure.findMany({
         where: {
             deletedAt: null,
-            clinic: {
-                userId,
-                deletedAt: null,
-            },
+            active: true,
+            OR: [
+                { userId: null, clinicId: null },
+                { userId, clinic: { deletedAt: null } },
+            ],
             ...(search && {
                 name: {
                     contains: search,

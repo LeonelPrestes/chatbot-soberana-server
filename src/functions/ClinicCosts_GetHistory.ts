@@ -40,7 +40,7 @@ export async function getClinicCostsHistory({ clinicId }: ClinicCostsParams, use
             sixMonthVariableCost: custo.sixMonthVariableCost.toNumber(),
             monthlyFixedCost: custo.monthlyFixedCost.toNumber(),
             monthlyVariableCost: custo.monthlyVariableCost.toNumber(),
-            effectiveHoursPerMonth: custo.effectiveHoursPerMonth,
+            effectiveHoursPerMonth: custo.effectiveHoursPerMonth.toNumber(),
             effectiveDate: custo.effectiveDate,
         }),
     );

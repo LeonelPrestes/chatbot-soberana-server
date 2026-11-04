@@ -15,16 +15,19 @@ import {
 } from 'fastify-type-provider-zod'
 import { env } from './env/env.js'
 import { errorHandler } from './errors/error-handler.js'
+import { ok } from './lib/api-response.js'
+import { prismaPlugin } from './plugins/prisma.js'
 
-import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+const __dirname = import.meta.dirname
 
 export const app = fastify({
   logger: loggerOptions,
 }).withTypeProvider<ZodTypeProvider>()
+
+app.register(prismaPlugin)
+app.get('/health', async () => ok({ uptime: process.uptime() }, 'API operacional'))
 
 app.setValidatorCompiler(validatorCompiler)
 app.setSerializerCompiler(serializerCompiler)
@@ -57,7 +60,7 @@ app.register(fastifyJwt, {
     signed: false,
   },
   sign: {
-    expiresIn: '7d',
+    expiresIn: env.JWT_EXPIRES,
   },
 })
 

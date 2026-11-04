@@ -48,6 +48,21 @@ enum ProfitType {
   @@map("tipo_lucro")
 }
 
+enum PricingStatus {
+  DRAFT     @map("rascunho")
+  FINALIZED @map("finalizada")
+  ARCHIVED  @map("arquivada")
+
+  @@map("status_precificacao")
+}
+
+enum ChangeSource {
+  MANUAL @map("manual")
+  AI     @map("ia")
+
+  @@map("origem_alteracao")
+}
+
 enum ItemCategory {
   MATERIAL           @map("material")
   COMMISSION         @map("comissao")
@@ -81,7 +96,7 @@ model User {
 
   emailVerifiedAt DateTime? @map("email_verificado_em")
   phone           String?   @map("telefone")
-  cpf             String?
+  cpf             String?   @unique
   specialty       String?   @map("especialidade")
   userType        UserType? @map("tipo_usuario")
   city            String?   @map("cidade")
@@ -93,11 +108,12 @@ model User {
   stateCro String? @map("estado_cro")
 
   // Configurações padrão usadas como valores iniciais em novas precificações
-  defaultCurrency     String?  @map("moeda_padrao") @default("BRL")
-  defaultServiceTime  Int?     @map("tempo_atendimento_padrao")
-  defaultProfitMargin Decimal? @map("margem_lucro_padrao") @db.Decimal(5, 4)
-  defaultTaxRate      Decimal? @map("aliquota_imposto_padrao") @db.Decimal(5, 4)
-  defaultCardFee      Decimal? @map("taxa_cartao_padrao") @db.Decimal(5, 4)
+  defaultCurrency     String?    @default("BRL") @map("moeda_padrao")
+  defaultServiceTime  Int?       @map("tempo_atendimento_padrao")
+  defaultProfitType   ProfitType @default(MARGIN) @map("tipo_lucro_padrao")
+  defaultProfitMargin Decimal?   @map("margem_lucro_padrao") @db.Decimal(5, 4)
+  defaultTaxRate      Decimal?   @map("aliquota_imposto_padrao") @db.Decimal(5, 4)
+  defaultCardFee      Decimal?   @map("taxa_cartao_padrao") @db.Decimal(5, 4)
 
   termsAcceptedAt         DateTime @map("termos_aceitos_em")
   termsVersion            String   @map("versao_termos")
@@ -111,8 +127,24 @@ model User {
   clinics       Clinic[]
   pricings      Pricing[]
   conversations Conversation[]
+  procedures    Procedure[]
+  pricingAudits PricingAudit[]
 
+  @@index([deletedAt])
   @@map("users")
+}
+
+model Specialty {
+  id        String    @id @default(uuid()) @db.Uuid
+  code      String    @unique @map("codigo")
+  name      String    @unique @map("nome")
+  active    Boolean   @default(true) @map("ativo")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([deletedAt])
+  @@map("especialidades")
 }
 
 model Clinic {
@@ -141,23 +173,34 @@ model Clinic {
   clinicCosts ClinicCosts[]
   pricings    Pricing[]
 
+  @@index([userId])
+  @@index([deletedAt])
   @@map("clinicas")
 }
 
 model Procedure {
-  id       String @id @default(uuid()) @db.Uuid
-  clinicId String @map("clinica_id") @db.Uuid
-  clinic   Clinic @relation(fields: [clinicId], references: [id])
+  id       String  @id @default(uuid()) @db.Uuid
+  code     String? @unique @map("codigo")
+  userId   String? @map("user_id") @db.Uuid
+  user     User?   @relation(fields: [userId], references: [id])
+  clinicId String? @map("clinica_id") @db.Uuid
+  clinic   Clinic? @relation(fields: [clinicId], references: [id])
 
   name        String  @map("nome")
-  category    String  @map("categoria")
+  category    String? @map("categoria")
   averageTime Int?    @map("tempo_medio")
   description String? @map("descricao")
+  active      Boolean @default(true) @map("ativo")
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
+  pricings Pricing[]
+
+  @@index([userId])
+  @@index([clinicId])
+  @@index([deletedAt])
   @@map("procedimentos")
 }
 
@@ -167,12 +210,13 @@ model ClinicCosts {
   clinicId String @map("clinica_id") @db.Uuid
   clinic   Clinic @relation(fields: [clinicId], references: [id])
 
-  sixMonthFixedCost      Decimal  @map("custo_fixo_6m") @db.Decimal(12, 2)
-  sixMonthVariableCost   Decimal  @map("custo_variavel_6m") @db.Decimal(12, 2)
-  monthlyFixedCost       Decimal  @map("custo_fixo_mensal") @db.Decimal(12, 2)
-  monthlyVariableCost    Decimal  @map("custo_variavel_mensal") @db.Decimal(12, 2)
-  effectiveHoursPerMonth Decimal  @map("horas_efetivas_mes") @db.Decimal(6, 2)
-  effectiveDate          DateTime @map("data_vigencia") @db.Date
+  sixMonthFixedCost      Decimal   @map("custo_fixo_6m") @db.Decimal(12, 2)
+  sixMonthVariableCost   Decimal   @map("custo_variavel_6m") @db.Decimal(12, 2)
+  monthlyFixedCost       Decimal   @map("custo_fixo_mensal") @db.Decimal(12, 2)
+  monthlyVariableCost    Decimal   @map("custo_variavel_mensal") @db.Decimal(12, 2)
+  effectiveHoursPerMonth Decimal   @map("horas_efetivas_mes") @db.Decimal(6, 2)
+  effectiveDate          DateTime  @map("data_vigencia") @db.Date
+  effectiveEnd           DateTime? @map("vigencia_fim") @db.Date
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
@@ -180,6 +224,8 @@ model ClinicCosts {
 
   pricings Pricing[]
 
+  @@index([clinicId])
+  @@index([deletedAt])
   @@map("clinica_custos")
 }
 
@@ -195,25 +241,27 @@ model Pricing {
   clinicCostsId String      @map("clinica_custos_id") @db.Uuid
   clinicCosts   ClinicCosts @relation(fields: [clinicCostsId], references: [id])
 
-  pricingDate   DateTime @map("data_precificacao") @db.Date
-  procedureType String   @map("tipo_procedimento")
+  pricingDate DateTime      @default(now()) @map("data_precificacao") @db.Date
+  procedureId String        @map("procedimento_id") @db.Uuid
+  procedure   Procedure     @relation(fields: [procedureId], references: [id])
+  status      PricingStatus @default(DRAFT) @map("status")
 
-  clinicalMinuteCost Decimal @map("custo_minuto_clinico") @db.Decimal(12, 4)
-  procedureTime      Int     @map("tempo_procedimento")
+  clinicalMinuteCost Decimal @default(0) @map("custo_minuto_clinico") @db.Decimal(12, 4)
+  procedureTime      Int     @default(0) @map("tempo_procedimento")
 
-  materialsCost  Decimal @map("custo_materiais") @db.Decimal(12, 2)
+  materialsCost  Decimal @default(0) @map("custo_materiais") @db.Decimal(12, 2)
   additionalCost Decimal @default(0) @map("custo_adicional") @db.Decimal(12, 2)
-  totalCost      Decimal @map("custo_total") @db.Decimal(12, 2)
+  totalCost      Decimal @default(0) @map("custo_total") @db.Decimal(12, 2)
 
-  tax        Decimal @map("imposto") @db.Decimal(5, 4)
-  fees       Decimal @map("taxas") @db.Decimal(5, 4)
-  commission Decimal @map("comissao") @db.Decimal(5, 4)
-  charges    Decimal @map("incidencias") @db.Decimal(5, 4)
+  tax        Decimal @default(0) @map("imposto") @db.Decimal(5, 4)
+  fees       Decimal @default(0) @map("taxas") @db.Decimal(5, 4)
+  commission Decimal @default(0) @map("comissao") @db.Decimal(5, 4)
+  charges    Decimal @default(0) @map("incidencias") @db.Decimal(5, 4)
 
-  profitType     ProfitType @map("tipo_lucro")
-  profit         Decimal    @map("lucro") @db.Decimal(5, 4)
-  adjustedCost   Decimal    @map("custo_corrigido") @db.Decimal(12, 2)
-  suggestedPrice Decimal    @map("preco_sugerido") @db.Decimal(12, 2)
+  profitType     ProfitType @default(MARGIN) @map("tipo_lucro")
+  profit         Decimal    @default(0) @map("lucro") @db.Decimal(5, 4)
+  adjustedCost   Decimal    @default(0) @map("custo_corrigido") @db.Decimal(12, 2)
+  suggestedPrice Decimal    @default(0) @map("preco_sugerido") @db.Decimal(12, 2)
 
   version Int @default(1)
 
@@ -223,21 +271,26 @@ model Pricing {
 
   items         PricingItem[]
   conversations Conversation[]
+  audits        PricingAudit[]
 
-  // [B-02] CHECK manual (adicionar via migração SQL):
-  // ALTER TABLE precificacoes ADD CONSTRAINT chk_incidencias_max CHECK (incidencias <= 0.95);
+  @@index([clinicId])
+  @@index([userId])
+  @@index([clinicCostsId])
+  @@index([procedureId])
+  @@index([deletedAt])
   @@map("precificacoes")
 }
 
 model PricingItem {
   id        String  @id @default(uuid()) @db.Uuid
   pricingId String  @map("precificacao_id") @db.Uuid
-  pricing   Pricing @relation(fields: [pricingId], references: [id])
+  pricing   Pricing @relation(fields: [pricingId], references: [id], onDelete: Cascade)
 
-  category ItemCategory @map("categoria")
-  name     String       @map("nome")
-  value    Decimal      @map("valor") @db.Decimal(12, 2)
-  quantity Decimal      @default(1) @map("quantidade") @db.Decimal(10, 2)
+  category  ItemCategory @map("categoria")
+  name      String       @map("nome")
+  unitValue Decimal      @map("valor_unitario") @db.Decimal(12, 2)
+  quantity  Decimal      @default(1) @map("quantidade") @db.Decimal(10, 2)
+  source    ChangeSource @default(MANUAL) @map("origem")
 
   version Int @default(1)
 
@@ -245,6 +298,8 @@ model PricingItem {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
+  @@index([pricingId])
+  @@index([deletedAt])
   @@map("itens_precificacao")
 }
 
@@ -253,8 +308,8 @@ model Conversation {
   userId String @map("user_id") @db.Uuid
   user   User   @relation(fields: [userId], references: [id])
 
-  pricingId String?  @map("precificacao_id") @db.Uuid
-  pricing   Pricing? @relation(fields: [pricingId], references: [id])
+  pricingId String  @map("precificacao_id") @db.Uuid
+  pricing   Pricing @relation(fields: [pricingId], references: [id])
 
   title String   @map("titulo")
   date  DateTime @map("data")
@@ -265,6 +320,9 @@ model Conversation {
 
   messages Message[]
 
+  @@index([userId])
+  @@index([pricingId])
+  @@index([deletedAt])
   @@map("conversas")
 }
 
@@ -276,7 +334,7 @@ model Message {
   sender  MessageSender @map("remetente")
   content String        @map("conteudo") @db.Text
 
-  structuredPayload Json?         @map("payload_estrutrado")
+  structuredPayload Json?         @map("payload_estruturado")
   status            MessageStatus @default(PENDING) @map("status")
 
   date DateTime @map("data")
@@ -285,5 +343,27 @@ model Message {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
+  @@index([conversationId])
+  @@index([deletedAt])
   @@map("mensagens")
+}
+
+model PricingAudit {
+  id            String       @id @default(uuid()) @db.Uuid
+  pricingId     String       @map("precificacao_id") @db.Uuid
+  pricing       Pricing      @relation(fields: [pricingId], references: [id])
+  field         String       @map("campo")
+  previousValue Json?        @map("valor_anterior")
+  newValue      Json?        @map("valor_novo")
+  authorId      String?      @map("autor_id") @db.Uuid
+  author        User?        @relation(fields: [authorId], references: [id])
+  source        ChangeSource @map("origem")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+  deletedAt     DateTime?    @map("deleted_at")
+
+  @@index([pricingId, createdAt])
+  @@index([authorId])
+  @@index([deletedAt])
+  @@map("precificacao_auditoria")
 }

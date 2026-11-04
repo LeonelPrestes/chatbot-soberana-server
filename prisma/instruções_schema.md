@@ -426,30 +426,13 @@ tsc valida os tipos
 
 ## Estado atual da pasta `prisma`
 
-Atualmente existe:
+O schema atual inclui usuários, especialidades, clínicas, custos com vigência,
+procedimentos do usuário e do sistema, precificações, itens, conversas,
+mensagens e auditoria. As migrations versionadas ficam em
+`prisma/migrations/`; a migration de fundação M0 acrescenta índices,
+restrições SQL, vigência única de custos e gatilhos de auditoria.
 
-```text
-prisma/schema.prisma
-```
-
-O schema ja possui:
-
-- configuracao do Prisma Client;
-- configuracao do PostgreSQL;
-- enum `UserType`;
-- model `User`.
-
-Ainda falta criar migrations para aplicar os models no banco.
-
-Quando for aplicar o model de usuario no banco, rode:
-
-```powershell
-pnpm exec prisma migrate dev --name create_users
-```
-
-Depois:
-
-```powershell
-pnpm exec prisma generate
-pnpm exec tsc --noEmit
-```
+Use `npm run db:deploy` para aplicar as migrations existentes,
+`npm run db:generate` para gerar o Prisma Client e `npm run typecheck` para validar
+o código. Consulte `INSTALACAO.md` para configuração local e cuidados com
+dados legados.

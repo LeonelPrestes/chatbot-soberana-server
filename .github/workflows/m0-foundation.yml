@@ -1,0 +1,45 @@
+name: M0 Foundation
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+        env:
+          DATABASE_URL: postgresql://audit:audit@localhost:5432/audit
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+        env:
+          DATABASE_URL: postgresql://audit:audit@localhost:5432/audit
+
+  compose:
+    runs-on: ubuntu-latest
+    env:
+      POSTGRES_USER: docker
+      POSTGRES_PASSWORD: docker
+      POSTGRES_DB: soberana_ci
+      JWT_SECRET: local-ci-secret
+      JWT_EXPIRES: 7d
+      IA_API_KEY: local-ci-placeholder
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker compose up --build -d --wait
+      - run: curl --fail --silent --show-error http://127.0.0.1:8081/health
+      - if: failure()
+        run: docker compose logs api postgres
+      - if: always()
+        run: docker compose down -v
